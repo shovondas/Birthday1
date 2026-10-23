@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Sweety - Interactive Birthday Experience</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Dancing+Script:wght@700&family=Inter:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+    <!-- GSAP for Smooth Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            background-color: #0d0d11;
+            color: #ffffff;
+            user-select: none;
+        }
+
+        .font-vintage { font-family: 'Cinzel Decorative', serif; }
+        .font-handwriting { font-family: 'Dancing Script', cursive; }
+        .font-serif-custom { font-family: 'Playfair Display', serif; }
+
+        /* Theater Curtain Background */
+        .curtain-bg {
+            background: linear-gradient(90deg, 
+                #400303 0%, #800a0a 15%, #b30f0f 25%, #800a0a 35%, #400303 50%, 
+                #800a0a 65%, #b30f0f 75%, #800a0a 85%, #400303 100%);
+            background-size: 80px 100%;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
+        }
+
+        .curtain-panel {
+            transition: transform 1.8s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        /* Burning effect transition overlay */
+        .burn-overlay {
+            background: radial-gradient(circle, rgba(255,100,0,0.8) 0%, rgba(255,0,0,0.6) 40%, rgba(0,0,0,1) 80%);
+            mix-blend-mode: screen;
+        }
+
+        /* Film Roll Ribbon Effect */
+        .film-strip {
+            display: flex;
+            gap: 15px;
+            animation: scrollFilm 25s linear infinite;
+            filter: grayscale(100%) contrast(120%);
+            transition: filter 0.5s ease;
+        }
+
+        .film-strip:hover {
+            animation-play-state: paused;
+            filter: grayscale(0%) contrast(100%);
+        }
+
+        @keyframes scrollFilm {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Polaroid Card Draggable Style */
+        .polaroid {
+            background: #ffffff;
+            padding: 12px 12px 35px 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+            cursor: grab;
+        }
+
+        .polaroid:active {
+            cursor: grabbing;
+        }
+
+        .polaroid:hover {
+            transform: scale(1.08) rotate(0deg) !important;
+            z-index: 40 !important;
+            box-shadow: 0 20px 35px rgba(255, 105, 180, 0.4);
+        }
+
+        /* Floating Butterfly Styling */
+        .butterfly {
+            position: absolute;
+            font-size: 24px;
+            animation: floatFly 6s ease-in-out infinite alternate;
+            cursor: pointer;
+            filter: drop-shadow(0 0 8px rgba(255,182,193,0.8));
+        }
+
+        @keyframes floatFly {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(30px, -40px) rotate(15deg); }
+            100% { transform: translate(-20px, -80px) rotate(-10deg); }
+        }
+
+        /* Flipbook Styling */
+        .book-container {
+            perspective: 1200px;
+        }
+        .book-page {
+            transform-origin: left center;
+            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+            transform-style: preserve-3d;
+        }
+        .book-page.flipped {
+            transform: rotateY(-180deg);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f0f15;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ff4757;
+            border-radius: 4px;
+        }
+
+        /* Glassmorphism Elements */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Floating Balloon Animation */
+        .balloon {
+            position: absolute;
+            bottom: -100px;
+            animation: floatUp 8s ease-in-out infinite;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-110vh) rotate(20deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-white min-h-screen relative overflow-x-hidden">
+
+    <!-- AUDIO PLAYER ELEMENT (Muted by default to comply with browser autoplay policies) -->
+    <audio id="bg-music" loop>
+        <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=happy-birthday-115335.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- SECTION 1: THEATER LOCK SCREEN WITH CURTAINS & COUNTDOWN -->
+    <section id="stage-1" class="fixed inset-0 z-50 flex items-center justify-center overflow-hidden transition-opacity duration-1000">
+        <!-- Left & Right Curtains -->
+        <div id="curtain-left" class="curtain-panel absolute top-0 left-0 w-1/2 h-full curtain-bg z-10 border-r-4 border-yellow-600/30"></div>
+        <div id="curtain-right" class="curtain-panel absolute top-0 right-0 w-1/2 h-full curtain-bg z-10 border-l-4 border-yellow-600/30"></div>
+
+        <!-- Lock Screen Content -->
+        <div class="relative z-20 text-center px-4 max-w-2xl mx-auto">
+            <div class="border-2 border-yellow-500/50 p-8 rounded-2xl bg-black/60 backdrop-blur-md shadow-2xl relative">
+                <!-- Lights vintage frame header -->
+                <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-600 text-black px-6 py-1 rounded-full font-bold text-xs tracking-widest uppercase shadow-lg">
+                    Special Cinema Presentation
+                </div>
+
+                <h1 class="font-vintage text-4xl sm:text-6xl text-yellow-500 tracking-wider mb-2 mt-4 drop-shadow-[0_4px_10px_rgba(234,179,8,0.5)]">
+                    NOW SHOWING
+                </h1>
+                <p class="text-gray-300 italic text-sm sm:text-base mb-8">A Special Production for Sweety • August 15th</p>
+
+                <!-- Countdown Timer -->
+                <div class="grid grid-cols-4 gap-3 sm:gap-4 my-6">
+                    <div class="bg-red-950/80 border border-red-800/50 p-3 sm:p-4 rounded-xl">
+                        <span id="timer-days" class="block font-bold text-3xl sm:text-5xl text-white">01</span>
+                        <span class="text-[10px] sm:text-xs text-red-300 uppercase tracking-widest">Days</span>
+                    </div>
+                    <div class="bg-red-950/80 border border-red-800/50 p-3 sm:p-4 rounded-xl">
+                        <span id="timer-hours" class="block font-bold text-3xl sm:text-5xl text-white">08</span>
+                        <span class="text-[10px] sm:text-xs text-red-300 uppercase tracking-widest">Hours</span>
+                    </div>
+                    <div class="bg-red-950/80 border border-red-800/50 p-3 sm:p-4 rounded-xl">
+                        <span id="timer-minutes" class="block font-bold text-3xl sm:text-5xl text-white">45</span>
+                        <span class="text-[10px] sm:text-xs text-red-300 uppercase tracking-widest">Mins</span>
+                    </div>
+                    <div class="bg-red-950/80 border border-red-800/50 p-3 sm:p-4 rounded-xl">
+                        <span id="timer-seconds" class="block font-bold text-3xl sm:text-5xl text-yellow-400">59</span>
+                        <span class="text-[10px] sm:text-xs text-red-300 uppercase tracking-widest">Secs</span>
+                    </div>
+                </div>
+
+                <!-- Unlock / Preview Button -->
+                <button id="unlock-btn" onclick="openCurtains()" class="mt-6 px-8 py-4 bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-600 text-black font-extrabold rounded-full shadow-lg hover:scale-105 active:scale-95 transition-transform duration-200 flex items-center justify-center gap-3 mx-auto">
+                    <i class="fa-solid font-bold fa-play"></i>
+                    <span>CLICK TO UNLOCK SHOW</span>
+                </button>
+                <p class="text-xs text-yellow-500/70 mt-4 tracking-widest">TAP TO OPEN SPECIAL CELEBRATION</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 2: AGE COUNTER & BURNING TRANSITION -->
+    <section id="stage-2" class="hidden min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-slate-950">
+        <!-- Floating Balloons Container -->
+        <div id="balloons-container" class="absolute inset-0 pointer-events-none z-10"></div>
+
+        <!-- Dynamic Counter Display -->
+        <div class="text-center z-20 px-4">
+            <p class="text-gray-400 uppercase tracking-widest text-sm mb-2">Counting The Wonderful Years</p>
+            <div id="age-display" class="font-black text-8xl sm:text-[14rem] leading-none text-white transition-all duration-300 cursor-pointer select-none drop-shadow-[0_10px_35px_rgba(255,255,255,0.2)]">
+                22
+            </div>
+            <p id="age-hint" class="text-yellow-400 text-sm sm:text-base mt-4 animate-pulse">
+                <i class="fa-solid fa-fire mr-1"></i> Click on the age number to ignite celebration!
+            </p>
+        </div>
+
+        <!-- Music Floating Card Widget -->
+        <div id="music-widget" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 glass-panel px-6 py-3 rounded-full flex items-center gap-4 shadow-2xl transition-all duration-500">
+            <div class="w-10 h-10 rounded-full bg-pink-500/20 border border-pink-500 flex items-center justify-center text-pink-400 animate-spin" style="animation-duration: 4s;">
+                <i class="fa-solid fa-music"></i>
+            </div>
+            <div>
+                <h4 class="text-xs font-bold text-white">Birthday Special Playlist</h4>
+                <p class="text-[10px] text-gray-400">Playing Heartfelt Melodies</p>
+            </div>
+            <button id="audio-toggle" onclick="toggleAudio()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-sm transition-colors">
+                <i id="audio-icon" class="fa-solid fa-volume-xmark"></i>
+            </button>
+        </div>
+    </section>
+
+    <!-- MAIN SCROLLABLE CONTENT (Appears after burning reveal) -->
+    <main id="main-content" class="opacity-0 pointer-events-none transition-opacity duration-1000 bg-gradient-to-b from-slate-950 via-purple-950/20 to-black text-white">
+
+        <!-- STAGE 3: HAPPY BIRTHDAY HEADER & FILM STRIP CAROUSEL -->
+        <section class="min-h-screen py-20 flex flex-col justify-center items-center relative overflow-hidden">
+            <div class="max-w-4xl mx-auto px-6 text-center mb-12">
+                <h2 class="font-vintage text-4xl sm:text-7xl text-amber-300 mb-4">Happy Birthday Sweety!</h2>
+                <p class="text-gray-300 font-serif-custom text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed">
+                    "May your day be filled with endless love, bright laughter, and unforgettable moments that linger in your heart forever."
+                </p>
+            </div>
+
+            <!-- Curved Film Strip Loop -->
+            <div class="w-full overflow-hidden py-10 relative">
+                <!-- Film Borders Styling -->
+                <div class="absolute top-0 left-0 right-0 h-4 bg-black border-y border-dashed border-gray-600 z-10"></div>
+                <div class="absolute bottom-0 left-0 right-0 h-4 bg-black border-y border-dashed border-gray-600 z-10"></div>
+
+                <div class="film-strip px-4">
+                    <!-- Duplicate set of photos for smooth continuous infinite loop -->
+                    <script>
+                        const filmImages = [
+                            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80',
+                            'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500&q=80',
+                            'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=500&q=80',
+                            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=500&q=80',
+                            'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=500&q=80',
+                            'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=500&q=80'
+                        ];
+                        // Write photos twice for seamless loop
+                        [...filmImages, ...filmImages].forEach((src, idx) => {
+                            document.write(`
+                                <div class="w-48 h-64 sm:w-60 sm:h-80 flex-shrink-0 bg-neutral-900 p-2 border-x-4 border-black shadow-2xl transform transition hover:scale-105">
+                                    <img src="${src}" class="w-full h-full object-cover rounded" alt="Memories ${idx}">
+                                </div>
+                            `);
+                        });
+                    </script>
+                </div>
+            </div>
+        </section>
+
+        <!-- STAGE 4: POLAROID WALL WITH DRAGGABLE PHOTOS & FLOATING BUTTERFLIES -->
+        <section class="py-20 px-4 min-h-screen relative max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <span class="text-xs uppercase tracking-widest text-pink-400 font-bold">Memory Lane</span>
+                <h3 class="text-3xl sm:text-5xl font-bold font-serif-custom mt-2">Interactive Memory Board</h3>
+                <p class="text-gray-400 text-sm mt-2">Drag the polaroids around • Click butterflies for surprise messages!</p>
+            </div>
+
+            <!-- Floating Butterflies -->
+            <div class="butterfly" style="top: 15%; left: 10%;" onclick="openMessage('You bring so much joy and sweetness into everyone\'s life. Never stop smiling! 💖')">🦋</div>
+            <div class="butterfly" style="top: 60%; left: 85%; animation-delay: -2s;" onclick="openMessage('Wish you a year filled with grand adventures and boundless happiness! ✨')">🦋</div>
+            <div class="butterfly" style="top: 80%; left: 15%; animation-delay: -4s;" onclick="openMessage('To the prettiest soul — Happy 23rd Birthday! 🎂🎉')">🦋</div>
+
+            <!-- Polaroids Grid Container -->
+            <div class="relative min-h-[600px] w-full flex flex-wrap justify-center items-center gap-8 p-4">
+                
+                <div class="polaroid absolute top-5 left-4 sm:left-12 rotate-[-6deg]" style="z-index: 1;">
+                    <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&q=80" class="w-48 h-56 object-cover pointer-events-none" alt="Cutie">
+                    <p class="font-handwriting text-2xl text-gray-800 text-center mt-3">Cutie ❤️</p>
+                </div>
+
+                <div class="polaroid absolute top-20 right-4 sm:right-16 rotate-[8deg]" style="z-index: 2;">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80" class="w-48 h-56 object-cover pointer-events-none" alt="Queen">
+                    <p class="font-handwriting text-2xl text-gray-800 text-center mt-3">The Birthday Queen 👑</p>
+                </div>
+
+                <div class="polaroid absolute top-[280px] left-1/2 -translate-x-1/2 rotate-[-2deg]" style="z-index: 3;">
+                    <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80" class="w-52 h-60 object-cover pointer-events-none" alt="Sunshine">
+                    <p class="font-handwriting text-2xl text-gray-800 text-center mt-3">Pure Sunshine ☀️</p>
+                </div>
+
+                <div class="polaroid absolute bottom-10 left-10 sm:left-32 rotate-[12deg]" style="z-index: 2;">
+                    <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&q=80" class="w-48 h-56 object-cover pointer-events-none" alt="Dream Girl">
+                    <p class="font-handwriting text-2xl text-gray-800 text-center mt-3">Dream Girl ✨</p>
+                </div>
+
+                <div class="polaroid absolute bottom-12 right-8 sm:right-28 rotate-[-10deg]" style="z-index: 1;">
+                    <img src="https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400&q=80" class="w-48 h-56 object-cover pointer-events-none" alt="Bestie">
+                    <p class="font-handwriting text-2xl text-gray-800 text-center mt-3">Always Beautiful 🌸</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- STAGE 5: INTERACTIVE SCRAPBOOK / SKETCHBOOK -->
+        <section class="py-20 px-4 bg-slate-900/60 flex flex-col items-center">
+            <div class="text-center mb-10">
+                <span class="text-xs uppercase tracking-widest text-amber-400 font-bold">Memories Book</span>
+                <h3 class="text-3xl sm:text-5xl font-bold font-vintage text-yellow-500 mt-1">Our Sketchbook</h3>
+                <p class="text-gray-400 text-sm mt-2">Click pages to turn and view birthday journal notes</p>
+            </div>
+
+            <!-- Flipbook Container -->
+            <div class="book-container w-full max-w-3xl h-[400px] sm:h-[480px] relative">
+                <div id="book" class="w-full h-full relative">
+                    
+                    <!-- Page 1 (Cover) -->
+                    <div class="book-page absolute inset-0 bg-gradient-to-br from-amber-900 to-amber-950 rounded-r-xl shadow-2xl p-8 border-l-8 border-amber-950 flex flex-col items-center justify-center text-center cursor-pointer z-30" onclick="turnPage(this)">
+                        <div class="border-2 border-dashed border-amber-400/40 p-8 rounded-lg w-full h-full flex flex-col items-center justify-center">
+                            <i class="fa-solid fa-book-bookmark text-5xl text-amber-400 mb-4"></i>
+                            <h4 class="font-vintage text-3xl sm:text-4xl text-amber-200">SKETCHBOOK</h4>
+                            <p class="font-handwriting text-xl text-amber-300/80 mt-2">Chapter 23: Happiness Unfolds</p>
+                            <span class="mt-8 text-xs text-amber-400/60 uppercase tracking-widest">Tap to Open Page ➔</span>
+                        </div>
+                    </div>
+
+                    <!-- Page 2 (Inside Note) -->
+                    <div class="book-page absolute inset-0 bg-stone-100 text-gray-900 rounded-r-xl shadow-2xl p-6 sm:p-10 border-l-8 border-amber-900 flex flex-col justify-between cursor-pointer z-20" onclick="turnPage(this)">
+                        <div class="flex gap-4 items-start">
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80" class="w-32 h-40 object-cover rounded shadow" alt="Pic">
+                            <div>
+                                <h5 class="font-handwriting text-3xl text-red-600 font-bold">Dear Sweety,</h5>
+                                <p class="text-sm text-gray-700 font-serif-custom mt-2 leading-relaxed">
+                                    Watching you grow into such a strong, beautiful, and kind person has been a true gift. Today, we celebrate all the wonderful chapters of your life!
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-handwriting text-2xl text-pink-600">With all my love ❤️</span>
+                        </div>
+                    </div>
+
+                    <!-- Page 3 (Photos Spread) -->
+                    <div class="book-page absolute inset-0 bg-stone-200 text-gray-900 rounded-r-xl shadow-2xl p-6 border-l-8 border-amber-900 flex flex-col justify-center items-center z-10">
+                        <h5 class="font-handwriting text-3xl text-amber-800 mb-4">Golden Moments</h5>
+                        <div class="grid grid-cols-2 gap-4 w-full">
+                            <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&q=80" class="w-full h-40 object-cover rounded border-4 border-white shadow" alt="Memory">
+                            <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300&q=80" class="w-full h-40 object-cover rounded border-4 border-white shadow" alt="Memory 2">
+                        </div>
+                        <button onclick="resetBook()" class="mt-6 px-4 py-2 bg-amber-800 text-white text-xs rounded-full shadow hover:bg-amber-700">Close Book</button>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- STAGE 6: 3D FLOATING PHOTO UNIVERSE -->
+        <section class="py-24 px-4 relative min-h-screen flex flex-col justify-center items-center overflow-hidden bg-black">
+            <div class="text-center z-10 mb-8">
+                <span class="text-xs uppercase tracking-widest text-indigo-400 font-bold">Stargazing Memories</span>
+                <h3 class="text-3xl sm:text-5xl font-bold font-vintage text-indigo-200 mt-1">Galaxy of Photos</h3>
+            </div>
+
+            <!-- Animated Starry Orbit Container -->
+            <div class="relative w-full max-w-5xl h-[500px] flex items-center justify-center">
+                <!-- Stars background effect -->
+                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-950/40 via-black to-black"></div>
+
+                <!-- Floating Cards Orbit -->
+                <div id="galaxy-cards" class="relative w-full h-full flex items-center justify-center">
+                    <script>
+                        const galaxyImgs = [
+                            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80',
+                            'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&q=80',
+                            'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300&q=80',
+                            'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&q=80',
+                            'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=300&q=80'
+                        ];
+                        galaxyImgs.forEach((src, index) => {
+                            const angle = (index / galaxyImgs.length) * 360;
+                            document.write(`
+                                <div class="galaxy-card absolute w-36 h-48 sm:w-44 sm:h-56 rounded-xl overflow-hidden border-2 border-indigo-500/40 shadow-[0_0_25px_rgba(99,102,241,0.3)] transition-transform duration-500 hover:scale-125 hover:z-30 cursor-pointer"
+                                     style="transform: rotate(${angle}deg) translate(180px) rotate(-${angle}deg);">
+                                    <img src="${src}" class="w-full h-full object-cover" alt="Galaxy Photo">
+                                </div>
+                            `);
+                        });
+                    </script>
+                </div>
+            </div>
+        </section>
+
+        <!-- STAGE 7: IPHONE-STYLE CHAT MESSENGER EXPERIENCE -->
+        <section class="py-20 px-4 bg-gradient-to-b from-black to-slate-950 flex flex-col items-center">
+            <div class="text-center mb-10">
+                <span class="text-xs uppercase tracking-widest text-emerald-400 font-bold">Personal Messages</span>
+                <h3 class="text-3xl sm:text-5xl font-bold font-serif-custom mt-1">Heartfelt Chat</h3>
+            </div>
+
+            <!-- iPhone Mockup Container -->
+            <div class="w-full max-w-sm sm:max-w-md bg-slate-900 border-8 border-slate-800 rounded-[40px] shadow-2xl overflow-hidden relative">
+                <!-- iPhone Notch -->
+                <div class="w-36 h-5 bg-black absolute top-0 left-1/2 -translate-x-1/2 rounded-b-xl z-30"></div>
+
+                <!-- Chat Header -->
+                <div class="bg-slate-800/80 backdrop-blur-md px-6 pt-8 pb-4 flex items-center gap-3 border-b border-slate-700">
+                    <div class="relative">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&q=80" class="w-10 h-10 rounded-full object-cover" alt="Profile">
+                        <span class="w-3 h-3 bg-green-500 border-2 border-slate-900 rounded-full absolute bottom-0 right-0"></span>
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-sm text-white flex items-center gap-1">
+                            My Love ❤️
+                        </h5>
+                        <p class="text-[10px] text-gray-400">iMessage • Online Now</p>
+                    </div>
+                </div>
+
+                <!-- Chat Messages Body -->
+                <div id="chat-body" class="p-4 h-[420px] overflow-y-auto space-y-4 text-xs sm:text-sm flex flex-col">
+                    <div class="text-center my-2">
+                        <span class="text-[10px] bg-slate-800 text-gray-400 px-3 py-1 rounded-full">TODAY 11:54 PM</span>
+                    </div>
+
+                    <!-- Chat Bubbles -->
+                    <div class="bg-amber-600/90 text-white p-3 rounded-2xl rounded-tl-none max-w-[80%] self-start shadow">
+                        Happppyyy birthday love ❤️
+                    </div>
+
+                    <div class="bg-amber-600/90 text-white p-3 rounded-2xl rounded-tl-none max-w-[85%] self-start shadow">
+                        A last bday pe ek problem hogi thi isliye ye wala bilkul special banana chahta hu.
+                    </div>
+
+                    <div class="bg-amber-600/90 text-white p-3 rounded-2xl rounded-tl-none max-w-[80%] self-start shadow">
+                        I hope ye dekh ke aapke chahere pe ek badi si smile to aa hogi 😊
+                    </div>
+
+                    <div class="bg-amber-600/90 text-white p-3 rounded-2xl rounded-tl-none max-w-[80%] self-start shadow">
+                        Nahi bhi aayi to kal 12 baje se surprises milna start ho jayenge! 🎉
+                    </div>
+
+                    <div class="bg-amber-600/90 text-white p-3 rounded-2xl rounded-tl-none max-w-[85%] self-start shadow">
+                        Afterall meri toh abhi se responsibility hai aapke smile ko maintain karna 💕
+                    </div>
+                </div>
+
+                <!-- Chat Input Footer Bar -->
+                <div class="p-3 bg-slate-800/90 border-t border-slate-700 flex items-center gap-2">
+                    <input type="text" placeholder="Send a sweet message..." class="w-full bg-slate-900 text-white text-xs px-4 py-2.5 rounded-full border border-slate-700 focus:outline-none focus:border-amber-500">
+                    <button onclick="sendChatMessage()" class="w-8 h-8 rounded-full bg-amber-500 text-black flex items-center justify-center flex-shrink-0 hover:bg-amber-400 transition">
+                        <i class="fa-solid fa-arrow-up"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="py-8 text-center text-xs text-gray-500 border-t border-slate-900">
+            Crafted with ❤️ for a Very Special Birthday • @SUJAL_MEHRA_02
+        </footer>
+    </main>
+
+    <!-- POPUP MESSAGE MODAL (For Butterfly Clicks) -->
+    <div id="message-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-pink-500/30 p-6 sm:p-8 rounded-3xl max-w-sm w-full text-center relative shadow-2xl">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div class="w-12 h-12 bg-pink-500/20 text-pink-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                🦋
+            </div>
+            <p id="modal-text" class="text-gray-200 font-serif-custom text-base leading-relaxed mb-6">
+                <!-- Message content injected via JS -->
+            </p>
+            <button onclick="closeModal()" class="px-6 py-2 bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs rounded-full shadow">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // 1. COUNTDOWN TIMER FUNCTIONALITY
+        function updateCountdown() {
+            const now = new Date();
+            // Set target birthday date
+            const currentYear = now.getFullYear();
+            let targetDate = new Date(currentYear, 7, 15); // August 15th
+            if (now > targetDate) {
+                targetDate = new Date(currentYear + 1, 7, 15);
+            }
+
+            const diff = targetDate - now;
+
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const m = Math.floor((diff / (1000 * 60)) % 60);
+            const s = Math.floor((diff / 1000) % 60);
+
+            document.getElementById('timer-days').innerText = String(d).padStart(2, '0');
+            document.getElementById('timer-hours').innerText = String(h).padStart(2, '0');
+            document.getElementById('timer-minutes').innerText = String(m).padStart(2, '0');
+            document.getElementById('timer-seconds').innerText = String(s).padStart(2, '0');
+        }
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        // 2. CURTAINS OPENING ANIMATION
+        function openCurtains() {
+            const left = document.getElementById('curtain-left');
+            const right = document.getElementById('curtain-right');
+            const stage1 = document.getElementById('stage-1');
+            const stage2 = document.getElementById('stage-2');
+
+            // Slide curtains outwards
+            left.style.transform = 'translateX(-100%)';
+            right.style.transform = 'translateX(100%)';
+
+            setTimeout(() => {
+                stage1.classList.add('opacity-0');
+                setTimeout(() => {
+                    stage1.style.display = 'none';
+                    stage2.classList.remove('hidden');
+                    // Play Audio
+                    playAudio();
+                }, 800);
+            }, 1000);
+        }
+
+        // 3. AUDIO PLAYER TOGGLE
+        const bgMusic = document.getElementById('bg-music');
+        const audioIcon = document.getElementById('audio-icon');
+
+        function playAudio() {
+            bgMusic.play().then(() => {
+                audioIcon.className = "fa-solid fa-volume-high";
+            }).catch(e => {
+                console.log("Autoplay prevented:", e);
+            });
+        }
+
+        function toggleAudio() {
+            if (bgMusic.paused) {
+                bgMusic.play();
+                audioIcon.className = "fa-solid fa-volume-high";
+            } else {
+                bgMusic.pause();
+                audioIcon.className = "fa-solid fa-volume-xmark";
+            }
+        }
+
+        // 4. AGE COUNTER & CELEBRATION REVEAL
+        const ageDisplay = document.getElementById('age-display');
+        let currentAge = 22;
+
+        ageDisplay.addEventListener('click', () => {
+            // Animate Age Increase (22 -> 23)
+            gsap.to(ageDisplay, {
+                scale: 1.3,
+                duration: 0.3,
+                yoyo: true,
+                repeat: 1,
+                onComplete: () => {
+                    currentAge = 23;
+                    ageDisplay.innerText = currentAge;
+                    triggerCelebration();
+                }
+            });
+        });
+
+        function triggerCelebration() {
+            // Trigger Confetti Explosion
+            confetti({
+                particleCount: 150,
+                spread: 100,
+                origin: { y: 0.6 }
+            });
+
+            // Spawn Balloons
+            spawnBalloons();
+
+            // Reveal Main Content Page after brief reveal
+            setTimeout(() => {
+                const mainContent = document.getElementById('main-content');
+                mainContent.classList.remove('opacity-0', 'pointer-events-none');
+                
+                // Smooth scroll down to birthday banner
+                mainContent.scrollIntoView({ behavior: 'smooth' });
+            }, 1500);
+        }
+
+        function spawnBalloons() {
+            const container = document.getElementById('balloons-container');
+            const colors = ['#ff4757', '#2ed573', '#1e90ff', '#ffa502', '#9b59b6'];
+
+            for (let i = 0; i < 20; i++) {
+                const balloon = document.createElement('div');
+                balloon.className = 'balloon';
+                const size = Math.random() * 30 + 40;
+                balloon.style.width = `${size}px`;
+                balloon.style.height = `${size * 1.2}px`;
+                balloon.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                balloon.style.borderRadius = '50% 50% 50% 50% / 40% 40% 60% 60%';
+                balloon.style.left = `${Math.random() * 90}%`;
+                balloon.style.animationDelay = `${Math.random() * 3}s`;
+                container.appendChild(balloon);
+            }
+        }
+
+        // 5. DRAGGABLE POLAROIDS (SIMPLE TOUCH/MOUSE LOGIC)
+        document.querySelectorAll('.polaroid').forEach(card => {
+            let isDragging = false;
+            let startX, startY, initialLeft, initialTop;
+
+            card.addEventListener('mousedown', startDrag);
+            card.addEventListener('touchstart', startDrag, { passive: true });
+
+            function startDrag(e) {
+                isDragging = true;
+                const clientX = e.clientX || e.touches[0].clientX;
+                const clientY = e.clientY || e.touches[0].clientY;
+
+                startX = clientX;
+                startY = clientY;
+                initialLeft = card.offsetLeft;
+                initialTop = card.offsetTop;
+
+                document.addEventListener('mousemove', onDrag);
+                document.addEventListener('touchmove', onDrag, { passive: true });
+                document.addEventListener('mouseup', stopDrag);
+                document.addEventListener('touchend', stopDrag);
+            }
+
+            function onDrag(e) {
+                if (!isDragging) return;
+                const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+                const dx = clientX - startX;
+                const dy = clientY - startY;
+
+                card.style.left = `${initialLeft + dx}px`;
+                card.style.top = `${initialTop + dy}px`;
+            }
+
+            function stopDrag() {
+                isDragging = false;
+                document.removeEventListener('mousemove', onDrag);
+                document.removeEventListener('touchmove', onDrag);
+            }
+        });
+
+        // 6. SKETCHBOOK PAGE FLIP
+        function turnPage(pageElement) {
+            pageElement.classList.add('flipped');
+        }
+
+        function resetBook() {
+            document.querySelectorAll('.book-page').forEach(page => {
+                page.classList.remove('flipped');
+            });
+        }
+
+        // 7. POPUP MODAL FOR BUTTERFLIES
+        function openMessage(msg) {
+            document.getElementById('modal-text').innerText = msg;
+            document.getElementById('message-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('message-modal').classList.add('hidden');
+        }
+
+        // 8. CHAT MESSAGE INTERACTION
+        function sendChatMessage() {
+            const input = document.querySelector('#stage-7 input, main input');
+            if (input && input.value.trim() !== '') {
+                const chatBody = document.getElementById('chat-body');
+                const newMsg = document.createElement('div');
+                newMsg.className = "bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none max-w-[80%] self-end shadow";
+                newMsg.innerText = input.value;
+                chatBody.appendChild(newMsg);
+                input.value = '';
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>
