@@ -435,20 +435,20 @@
                 <!-- Chat Messages Body -->
                 <div id="chat-body" class="p-4 h-[420px] overflow-y-auto space-y-4 text-xs sm:text-sm flex flex-col">
                     <div class="text-center my-2">
-                        <span class="text-[10px] bg-slate-800 text-gray-400 px-3 py-1 rounded-full">TODAY 11:54 PM</span>
+                        <span class="text-[10px] bg-slate-800 text-gray-400 px-3 py-1 rounded-full">TODAY 11:59 PM</span>
                     </div>
 
                     <!-- Chat Bubbles -->
                     <div class="bg-amber-600/90 text-white p-3 rounded-2xl rounded-tl-none max-w-[80%] self-start shadow">
-                        Happppyyy birthday love ❤️
+                        Happpy birthday ❤️
                     </div>
 
                     <div class="bg-amber-600/90 text-white p-3 rounded-2xl rounded-tl-none max-w-[85%] self-start shadow">
-                        A last bday pe ek problem hogi thi isliye ye wala bilkul special banana chahta hu.
+                        আগের বারে বিশেষ আয়োজন করতে পারি নাই তাই এইটা
                     </div>
 
                     <div class="bg-amber-600/90 text-white p-3 rounded-2xl rounded-tl-none max-w-[80%] self-start shadow">
-                        I hope ye dekh ke aapke chahere pe ek badi si smile to aa hogi 😊
+                        I hope এইটা দেখার পর তোমার মুখে একটা মুচকি হাসি আসছে😊
                     </div>
 
                     <div class="bg-amber-600/90 text-white p-3 rounded-2xl rounded-tl-none max-w-[80%] self-start shadow">
@@ -472,7 +472,7 @@
 
         <!-- FOOTER -->
         <footer class="py-8 text-center text-xs text-gray-500 border-t border-slate-900">
-            Crafted with ❤️ for a Very Special Birthday • @SUJAL_MEHRA_02
+            Crafted with ❤️ for a Very Special Birthday • @Shovon
         </footer>
     </main>
 
@@ -501,9 +501,9 @@
             const now = new Date();
             // Set target birthday date
             const currentYear = now.getFullYear();
-            let targetDate = new Date(currentYear, 7, 15); // August 15th
+            let targetDate = new Date(currentYear, 1, 17); // August 15th
             if (now > targetDate) {
-                targetDate = new Date(currentYear + 1, 7, 15);
+                targetDate = new Date(currentYear + 1, 1, 17);
             }
 
             const diff = targetDate - now;
@@ -567,7 +567,7 @@
 
         // 4. AGE COUNTER & CELEBRATION REVEAL
         const ageDisplay = document.getElementById('age-display');
-        let currentAge = 22;
+        let currentAge = 26;
 
         ageDisplay.addEventListener('click', () => {
             // Animate Age Increase (22 -> 23)
@@ -577,7 +577,7 @@
                 yoyo: true,
                 repeat: 1,
                 onComplete: () => {
-                    currentAge = 23;
+                    currentAge = 26;
                     ageDisplay.innerText = currentAge;
                     triggerCelebration();
                 }
@@ -689,16 +689,29 @@
 
         // 8. CHAT MESSAGE INTERACTION
         function sendChatMessage() {
-            const input = document.querySelector('#stage-7 input, main input');
-            if (input && input.value.trim() !== '') {
-                const chatBody = document.getElementById('chat-body');
-                const newMsg = document.createElement('div');
-                newMsg.className = "bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none max-w-[80%] self-end shadow";
-                newMsg.innerText = input.value;
-                chatBody.appendChild(newMsg);
-                input.value = '';
-                chatBody.scrollTop = chatBody.scrollHeight;
-            }
+  const messageInput = document.getElementById('chatInput');
+  const message = messageInput.value.trim();
+
+  // আপনার কান্ট্রি কোড সহ WhatsApp নম্বরটি এখানে বসান (যেমন: 88017XXXXXXXX)
+  const phoneNumber = "8801627148153"; 
+
+  if (message !== "") {
+    // মেসেজটি URL এ ব্যবহারের উপযোগী করা
+    const encodedMessage = encodeURIComponent(message);
+    
+    // WhatsApp লিংক তৈরি
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    
+    // নতুন ট্যাবে WhatsApp ওপেন করা
+    window.open(whatsappUrl, '_blank');
+    
+    // ইনপুট বক্স পরিষ্কার করা
+    messageInput.value = "";
+  } else {
+    alert("অনুগ্রহ করে কিছু লিখুন!");
+  }
+}
+
         }
     </script>
 </body>
